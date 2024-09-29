@@ -24,9 +24,9 @@ func mustToken() string {
 		"token for tg bot",
 	)
 	flag.Parse()
-	if *token == ""{
+	if *token == "" {
 		log.Fatal("token is not specifed") //WHAT IS?
 	}
 	return *token
-
+	sfs
 }
