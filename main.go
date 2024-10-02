@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	mustToken()
+	t := mustToken()
 
 	//tgClient= telegram.New(token)
 
@@ -23,10 +23,12 @@ func mustToken() string {
 		"",
 		"token for tg bot",
 	)
+
 	flag.Parse()
+
 	if *token == "" {
 		log.Fatal("token is not specifed") //WHAT IS?
 	}
 	return *token
-	sfs
+
 }
