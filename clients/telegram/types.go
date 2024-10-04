@@ -1,4 +1,4 @@
-package main
+package telegram
 
 type updateResponse struct {
 	Ok     bool     `json:"ok"`
@@ -8,8 +8,4 @@ type updateResponse struct {
 type Update struct {
 	ID      int    `json:"id"`
 	Message string `json:"message"`
-}
-
-func main() {
-
 }

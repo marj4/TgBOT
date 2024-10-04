@@ -1,4 +1,4 @@
-package main
+package telegram
 
 import (
 	error2 "Telegrambot/Library/error"
