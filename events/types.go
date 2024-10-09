@@ -12,7 +12,7 @@ type Type int
 
 const (
 	Unknown Type = iota
-	Messaqge
+	Message
 )
 
 type Event struct {
