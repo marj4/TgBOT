@@ -4,6 +4,7 @@ import (
 	error2 "Telegrambot/Library/error"
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -24,7 +25,7 @@ func New(basePath string) Storage {
 	return Storage{basePath: basePath}
 }
 
-func (s Storage) Save(page *Page) (err error) {
+func (s *Storage) Save(page *Page) (err error) {
 	//Определяем способы обработки ошибок
 	defer func() { err = error2.Wrap("cant save page", err) }()
 
@@ -59,15 +60,15 @@ func (s Storage) Save(page *Page) (err error) {
 
 }
 
-func (s Storage) PickRandom(username string) (page *Page, err error) {
-	//Определяем способы обработки ошибок
+func (s *Storage) PickRandom(username string) (page *Page, err error) {
+	//Определяем обработку ошибки
 	defer func() { err = error2.Wrap("cant pick random page", err) }()
 
-	// Определяем куда мы будем сохранять файлы
-	filePath := filepath.Join(s.basePath, username)
+	//Получаем путь к директокрии с файлами
+	path := filepath.Join(s.basePath, username)
 
 	//Получаем список файлов
-	files, err := os.ReadDir(filePath)
+	files, err := os.ReadDir(path)
 	if err != nil {
 		return nil, err
 	}
@@ -77,29 +78,69 @@ func (s Storage) PickRandom(username string) (page *Page, err error) {
 		return nil, ErrorsNew
 	}
 
-	//Генерируем случайное число,
+	//Генерируем случайное число
 	rand.Seed(time.Now().UnixNano())
-
-	//Получаем само число
 	n := rand.Intn(len(files))
 
-	//Получаем файл с номером, который мы сгенерировали
+	//Берем файл под номером n
 	file := files[n]
 
-	//Декодируем файл(open file ---> decode)
+	//open decode
+	return s.decodePage(filepath.Join(path, file.Name()))
 
 }
 
+func (s *Storage) Remove(p *Page) (err error) {
+
+	fileName, err := fileName(p)
+	if err != nil {
+		return error2.Wrap("cant remove page", err)
+	}
+
+	path := filepath.Join(s.basePath, p.userName, fileName)
+
+	if err := os.Remove(path); err != nil {
+		return error2.Wrap(fmt.Sprintf("cant remove page %s", path), err)
+	}
+
+	return nil
+}
+
+func (s *Storage) IsExist(p *Page) (bool, error) {
+	fileName, err := fileName(p)
+	if err != nil {
+		return false, error2.Wrap("cant remove page", err)
+	}
+
+	path := filepath.Join(s.basePath, p.userName, fileName)
+
+	switch _, err := os.Stat(path); {
+	case errors.Is(err, os.ErrNotExist):
+		return false, nil
+	case err != nil:
+		return false, error2.Wrap(fmt.Sprintf("cant check if file %s exist", path), err)
+	}
+	return true, nil
+}
+
 func (s Storage) decodePage(filepath string) (*Page, error) {
-	//Открываем файл
+	//Open the file
 	f, err := os.Open(filepath)
 	if err != nil {
-		return nil, error2.Wrap("cant decode page", err)
+		return nil, error2.Wrap("cant open file per path", err)
 	}
-	//Закрываем
+
+	//Close the file
 	defer func() { _ = f.Close() }()
 
-	//FINISH IT...
+	//Создаем переменную, в которой файл будет декодирован
+	var p Page
+
+	if err := gob.NewDecoder(f).Decode(&p); err != nil {
+		return nil, error2.Wrap("cant decode page", err)
+	}
+
+	return &p, nil
 }
 
 // Определяем имя файла
